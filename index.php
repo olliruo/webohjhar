@@ -37,6 +37,10 @@ if (isset($_GET["changeinfoapply"])) $changeinfoapply_request = $_GET["changeinf
 else $changeinfoapply_request = "false";
 if (isset($_GET["devices"])) $devices_request = $_GET["devices"];
 else $devices_request = "false";
+if (isset($_GET["devices_lease_search"])) $devices_search_request = $_GET["devices_lease_search"];
+else $devices_search_request = "false";
+if (isset($_GET["devices"])) $devices_request = $_GET["devices"];
+else $devices_request = "false";
 if (isset($_GET["deviceslease"])) $devices_lease_request = $_GET["deviceslease"];
 else $devices_lease_request = "false";
 if (isset($_GET["newdevice"])) $newdevice_request = $_GET["newdevice"];
@@ -53,6 +57,33 @@ if (!($register_request == "true" || $changeinfo_request == "true" || $devices_r
 	$login_request = true;
 }
 
+//Search variables
+{
+	$search = array();
+	
+	if (isset($_GET["search_category"])) $search["category"] = $_GET["search_category"];
+	else $search["category"] = "false";
+	
+	if (isset($_GET["search_name"])) $search["name"] = $_GET["search_name"];
+	else $search["name"] = "false";
+	
+	if (isset($_GET["search_manufactor"])) $search["manufactor"] = $_GET["search_manufactor"];
+	else $search["manufactor"] = "false";
+	
+	if (isset($_GET["search_model"])) $search["model"] = $_GET["search_model"];
+	else $search["model"] = "false";
+	
+	if (isset($_GET["search_location"])) $search["location"] = $_GET["search_location"];
+	else $search["location"] = "false";
+	
+	if (isset($_GET["search_owner"])) $search["owner"] = $_GET["search_owner"];
+	else $search["owner"] = "false";
+	
+	if (isset($_GET["search_serial"])) $search["serial"] = $_GET["search_serial"];
+	else $search["serial"] = "false";
+	
+	$_SESSION["search"] = $search;
+}
 
 // Start session
 if(session_status()!= PHP_SESSION_ACTIVE)
@@ -82,6 +113,7 @@ $cust["city"] = "";
 $cust["email"] = "";
 $cust["phone"] = "";
 $cust["password"] = "";
+$cust["is_admin"] = false;
 
 if (isset($_SESSION["cust"]))
 {
@@ -214,14 +246,23 @@ if ($devices_lease_request == "true")
 	<div class="container">
 		<div class="row">
 			<h1>Varattavissa olevat laitteet</h1>
-			<form action="index.php">
-				<input type="hidden" name="deviceslease" value="true">
-				<input style="width: 200px;" type="text" name="searchwords" class="form-control pull-right" placeholder="Hae kirjoittamalla..." value="">
-			</form>
 			<br /><br />
-			<div class="list-group">';
-				echo(buttonsfordevices($_SESSION["devices"], true));
-				echo '
+			
+			<div class="col-sm-6">
+				' . generatesearch() . '
+			</div>
+			<div class="col-sm-6">
+				<div class="list-group">';
+					if ($devices_search_request == "true")
+					{
+						echo(buttonsfordevices($_SESSION["devices"], true, $search));
+					}
+					else
+					{
+						echo(buttonsfordevices($_SESSION["devices"], true));
+					}
+					echo '
+				</div>
 			</div>
 		</div>
 	</div>';
@@ -292,11 +333,22 @@ if ($changeinfo_request == "true")
 
 if ($register_request == "true")
 {
+	$regsuccess = false;
 	if ($registerapply_request == "true" && isset($username) && isset($firstname) && isset($lastname) && isset($address) && isset($postal) && isset($city) && isset($email) && isset($phone) && isset($password) && isset($confirm_password))
 	{
 		if (dbregister($username, $firstname, $lastname, $address, $postal, $city, $password, $confirm_password, $phone, $email))
 		{
-			echo "<p>Registered succesfully!</p>";
+			dbgetcustomer($username);
+			echo '<div class="container">
+				<div class="row">
+					<h1>Rekisteröinti onnistui ' . $cust["username"] . '!</h1>
+					<form>
+						<input type = "hidden" name = "devices" value = "true">
+						<input class="btn btn-nav" type="submit" value="Hyvä homma">
+					</form>
+				</div>
+			</div>';
+			$regsuccess = true;
 		}
 		else
 		{
@@ -307,56 +359,60 @@ if ($register_request == "true")
 	{
 		echo "<p>Syötä kaikki tarvittavat tiedot!</p>";
 	}
-	echo "
-	<form name=\"frmRegistration\" method=\"get\" action=\"index.php\">
-		<table border=\"0\" width=\"500\" align=\"center\" class=\"demo-table\">
-			<tr>
-				<td>User Name</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"username\" value=\"" . $username . "\"></td>
-			</tr>
-			<tr>
-				<td>First Name</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"firstname\" value=\"" . $firstname . "\"></td>
-			</tr>
-			<tr>
-				<td>Last Name</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"lastname\" value=\"" . $lastname . "\"></td>
-			</tr>
-			<tr>
-				<td>Address</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"address\" value=\"" . $address . "\"></td>
-			</tr>
-			<tr>
-				<td>Postal</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"postal\" value=\"" . $postal . "\"></td>
-			</tr>
-			<tr>
-				<td>City</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"city\" value=\"" . $city . "\"></td>
-			</tr>
-					<tr>
-				<td>Email</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"email\" value=\"" . $email . "\"></td>
-			</tr>
-					<tr>
-				<td>Phone</td>
-				<td><input type=\"text\" class=\"demoInputBox\" name=\"phone\" value=\"" . $phone . "\"></td>
-			</tr>
-			<tr>
-				<td>Password</td>
-				<td><input type=\"password\" class=\"demoInputBox\" name=\"password\"></td>
-			</tr>
-			<tr>
-				<td>Confirm Password</td>
-				<td><input type=\"password\" class=\"demoInputBox\" name=\"confirm_password\"></td>
-			</tr>
-			<tr>
-				<input type = \"hidden\" name = \"registerapply\" value = \"true\">
-				<input type = \"hidden\" name = \"register\" value = \"true\">
-				<td colspan=2><input type=\"checkbox\" name=\"terms\"> I accept Terms and Conditions <input type=\"submit\" name=\"register-user\" value=\"Register\" class=\"btnRegister\"></td>
-			</tr>
-		</table>
-	</form>";
+	
+	if ($regsuccess == false)
+	{
+		echo "
+		<form name=\"frmRegistration\" method=\"get\" action=\"index.php\">
+			<table border=\"0\" width=\"500\" align=\"center\" class=\"demo-table\">
+				<tr>
+					<td>User Name</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"username\" value=\"" . $username . "\"></td>
+				</tr>
+				<tr>
+					<td>First Name</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"firstname\" value=\"" . $firstname . "\"></td>
+				</tr>
+				<tr>
+					<td>Last Name</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"lastname\" value=\"" . $lastname . "\"></td>
+				</tr>
+				<tr>
+					<td>Address</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"address\" value=\"" . $address . "\"></td>
+				</tr>
+				<tr>
+					<td>Postal</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"postal\" value=\"" . $postal . "\"></td>
+				</tr>
+				<tr>
+					<td>City</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"city\" value=\"" . $city . "\"></td>
+				</tr>
+						<tr>
+					<td>Email</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"email\" value=\"" . $email . "\"></td>
+				</tr>
+						<tr>
+					<td>Phone</td>
+					<td><input type=\"text\" class=\"demoInputBox\" name=\"phone\" value=\"" . $phone . "\"></td>
+				</tr>
+				<tr>
+					<td>Password</td>
+					<td><input type=\"password\" class=\"demoInputBox\" name=\"password\"></td>
+				</tr>
+				<tr>
+					<td>Confirm Password</td>
+					<td><input type=\"password\" class=\"demoInputBox\" name=\"confirm_password\"></td>
+				</tr>
+				<tr>
+					<input type = \"hidden\" name = \"registerapply\" value = \"true\">
+					<input type = \"hidden\" name = \"register\" value = \"true\">
+					<td colspan=2><input type=\"checkbox\" name=\"terms\"> I accept Terms and Conditions <input type=\"submit\" name=\"register-user\" value=\"Register\" class=\"btnRegister\"></td>
+				</tr>
+			</table>
+		</form>";
+	}
 }
 
 }
@@ -510,7 +566,11 @@ function dbregister($username, $firstname, $lastname, $address, $postal, $city, 
 			
 			$row = array();
 		
-			if ($result = false) return false;
+			if ($result = false)
+			{
+				echo "<p>Select ee toemi :(</p>";
+				return false;
+			}
 
 			if (is_array($result)) $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
 			
@@ -520,34 +580,34 @@ function dbregister($username, $firstname, $lastname, $address, $postal, $city, 
 				{
 					if($result->num_rows != 0) //Username already exists
 					{
+						echo "<p>Käyttäjä onp jo olemasa!</p>";
 						return false;
 					}
 				}
 			}
+			
+			$join_date = $last_login = date('Y-m-d H:i:s', time());
+
+			$conn = dbconnect();
+		
+			if ($conn)
+			{
+				$sql = "INSERT INTO customer(username, password, firstname, lastname, address, postal, city, phone, email, join_date, last_login) VALUES ('$username', '$password', '$firstname', '$lastname', '$address', '$postal', '$city', '$phone', '$email', '$join_date', '$last_login')";
+				$result = $conn->query($sql);
+				mysqli_close($conn);
+				return $result;
+			}
+			
 			else
 			{
-				$join_date = $last_login = date('Y-m-d H:i:s', time());
-
-				$conn = dbconnect();
-			
-				if ($conn)
-				{
-					$sql = "INSERT INTO customer(username, password, firstname, lastname, address, postal, city, phone, email, join_date, last_login) VALUES ('$username', '$password', '$firstname', '$lastname', '$address', '$postal', '$city', '$phone', '$email', '$join_date', '$last_login')";
-					$result = $conn->query($sql);
-					mysqli_close($conn);
-					return $result;
-				}
-				
-				else
-				{
-					echo "INSERT";
-					mysqli_close($conn);
-					return false;
-				}
+				echo "<p>Käyttäjän lisääminen tietokantaan ei onnistunut, yyy</p>";
+				mysqli_close($conn);
+				return false;
 			}
 		}
 		else
 		{
+			echo "<p>Tapahtui odottamaton virhe, virhekoodi: \"pizzaperjantai\" alennusta 10% kaikista pizzoista perjantaina #PizzaOnline</p>";
 			mysqli_close($conn);
 			return false;
 		}
@@ -631,6 +691,9 @@ function dbgetcustomer($username)
 		$cust["phone"] = 		$row['phone'];
 		$cust["password"] = 	$row['password'];
 		
+		if ($row['is_admin'] == 1) $cust["is_admin"] = true;
+		else $cust["is_admin"] = false;
+		
 		$_SESSION["cust"] = $cust;
 	}
 	mysqli_close($conn);
@@ -643,8 +706,25 @@ function dbgetdevices($userid)
 		
 	if ($conn)
 	{
-		$sql = "SELECT * FROM devices WHERE customer_id = '$userid'";
-		
+		$sql = "SELECT
+		devices.device_id,
+		devices.customer_id,
+		devices.category_id,
+		devices.name,
+		devices.manufactor,
+		devices.model,
+		devices.description,
+		devices.serialnumber,
+		devices.hide,
+		customer.firstname as cust_firstname,
+		customer.lastname as cust_lastname,
+		customer.address as cust_address,
+		customer.postal as cust_postal,
+		customer.city as cust_city
+		FROM devices
+		INNER JOIN customer ON devices.customer_id = customer.customer_id
+		WHERE devices.customer_id = '$userid'";
+				
 		$result = $conn->query($sql);
 		
 		$rows = array();
@@ -713,35 +793,90 @@ function dbdeletedevice($id)
 	return $result;
 }
 
-function buttonsfordevices($devices, $showall = false)
+function buttonsfordevices($devices, $showall = false, $search = array())
 {
 	$html = "";
 	$i = 0;
 	
 	if($showall == true)
 	{
-		$conn = dbconnect();
-		
-		$sql = "SELECT * FROM devices";
-		
-		$result = $conn->query($sql);
-		
-		$rows = array();
-		while ($row = $result->fetch_assoc())
+		if(!empty($search))
 		{
-			$rows[] = $row;
+			$conn = dbconnect();
+			
+			$sql = "SELECT * FROM devices INNER JOIN customer ON devices.customer_id = customer.customer_id INNER JOIN category ON devices.category_id = category.category_id";
+			
+			$sql = $sql . " WHERE ";
+			if (!empty($search["category"])) $sql = $sql . "category.name LIKE '%" . $search["category"] . "%' AND ";
+			if (!empty($search["name"])) $sql = $sql . "devices.name LIKE '%" . $search["name"] . "%' AND ";
+			if (!empty($search["manufactor"])) $sql = $sql . "devices.manufactor LIKE '%" . $search["manufactor"] . "%' AND ";
+			if (!empty($search["model"])) $sql = $sql . "devices.model LIKE '%" . $search["model"] . "%' AND ";
+			if (!empty($search["location"])) $sql = $sql . "customer.address LIKE '%" . $search["location"] . "%' AND ";
+			if (!empty($search["location"])) $sql = $sql . "customer.postal LIKE '%" . $search["location"] . "%' AND ";
+			if (!empty($search["location"])) $sql = $sql . "customer.city LIKE '%" . $search["location"] . "%' AND ";
+			if (!empty($search["owner"])) $sql = $sql . "customer.firstname LIKE '%" . $search["owner"] . "%' AND ";
+			if (!empty($search["owner"])) $sql = $sql . "customer.lastname LIKE '%" . $search["owner"] . "%' AND ";
+			if (!empty($search["serial"])) $sql = $sql . "devices.serialnumber LIKE '%" . $search["serial"] . "%'";
+			
+			if (endsWith($sql, " AND ")) $sql = substr($sql, 0, -5);
+			
+			var_dump($sql);
+			
+			$result = $conn->query($sql);
+			
+			if ($result == false)
+			{
+				$html = "<h3>Kohteita ei löytynyt!</h3>";
+			}
+			
+			else
+			{
+				$rows = array();
+				while ($row = $result->fetch_assoc())
+				{
+					$rows[] = $row;
+				}
+				
+				foreach($rows as $d)
+				{
+					$i++;
+					if($d["hide"] == 0)
+					{
+						$html = $html . "
+						<a class=\"btn list-group-item\" data-toggle=\"modal\" data-target=\"#device$i\">
+							<h3>" . $d["name"] . "</h3>
+							<p>" . $d["description"] . "</p>
+						</a>";
+					}
+				}
+			}
 		}
 		
-		foreach($rows as $d)
+		else
 		{
-			$i++;
-			if($d["hide"] == 0)
+			$conn = dbconnect();
+			
+			$sql = "SELECT * FROM devices";
+			
+			$result = $conn->query($sql);
+			
+			$rows = array();
+			while ($row = $result->fetch_assoc())
 			{
-				$html = $html . "
-				<a class=\"btn list-group-item\" data-toggle=\"modal\" data-target=\"#device$i\">
-					<h3>" . $d["name"] . "</h3>
-					<p>" . $d["description"] . "</p>
-				</a>";
+				$rows[] = $row;
+			}
+			
+			foreach($rows as $d)
+			{
+				$i++;
+				if($d["hide"] == 0)
+				{
+					$html = $html . "
+					<a class=\"btn list-group-item\" data-toggle=\"modal\" data-target=\"#device$i\">
+						<h3>" . $d["name"] . "</h3>
+						<p>" . $d["description"] . "</p>
+					</a>";
+				}
 			}
 		}
 	}
@@ -769,6 +904,11 @@ function buttonsfordevices($devices, $showall = false)
 	return $html;
 }
 
+function endsWith($haystack, $needle)
+{
+    return substr($haystack, -strlen($needle))===$needle;
+}
+
 function modalsfordevices($devices, $showall = false)
 {
 	$html = "";
@@ -778,7 +918,23 @@ function modalsfordevices($devices, $showall = false)
 	{
 		$conn = dbconnect();
 		
-		$sql = "SELECT * FROM devices";
+		$sql = "SELECT
+		devices.device_id,
+		devices.customer_id,
+		devices.category_id,
+		devices.name,
+		devices.manufactor,
+		devices.model,
+		devices.description,
+		devices.serialnumber,
+		devices.hide,
+		customer.firstname as cust_firstname,
+		customer.lastname as cust_lastname,
+		customer.address as cust_address,
+		customer.postal as cust_postal,
+		customer.city as cust_city
+		FROM devices
+		INNER JOIN customer ON devices.customer_id = customer.customer_id";		
 		
 		$result = $conn->query($sql);
 		
@@ -787,7 +943,7 @@ function modalsfordevices($devices, $showall = false)
 		{
 			$rows[] = $row;
 		}
-		
+
 		foreach($rows as $d)
 		{
 			$i++;
@@ -807,12 +963,29 @@ function modalsfordevices($devices, $showall = false)
 								<p>Valmistaja: " . $d["manufactor"] . "</p>
 								<p>Malli: " . $d["model"] . "</p>
 								<p>Sarjanumero: " . $d["serialnumber"] . "</p>
+								<p>Sijainti: " . $d["cust_address"] . ", " . $d["cust_postal"] . " " . $d["cust_city"] . "</p>
+								<p>Omistaja: " . $d["cust_firstname"] . " " . $d["cust_lastname"] . "</p>
 							</div>
 							<div class=\"modal-footer\">
 								<form action=\"index.php\">
 									<input class=\"btn btn-primary pull-left\" type=\"submit\" value=\"Varaa tämä laite\">
+								</form>";
+								
+								if ($_SESSION["cust"]["username"] == true) $html = $html . "
+								<form action=\"index.php\">
+									<input type=\"hidden\" name=\"devices\" value=\"true\">
+									<input type=\"hidden\" name=\"deldevice\" value=\"true\">
+									<input type=\"hidden\" name=\"device_id\" value=\"" . $d["device_id"] . "\">
+									<input class=\"btn btn-danger pull-left\" type=\"submit\" value=\"Poista laite\">
 								</form>
-								<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
+								<form action=\"index.php\">
+									<input type=\"hidden\" name=\"devices\" value=\"true\">
+									<input type=\"hidden\" name=\"moddevice\" value=\"true\">
+									<input type=\"hidden\" name=\"device_id\" value=\"" . $d["device_id"] . "\">
+									<input class=\"btn btn-warning pull-left\" type=\"submit\" value=\"Muokkaa laitteen tietoja\">
+								</form>";
+								
+								$html = $html . "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
 							</div>
 						</div>
 					</div>
@@ -841,8 +1014,11 @@ function modalsfordevices($devices, $showall = false)
 								<p>Valmistaja: " . $d["manufactor"] . "</p>
 								<p>Malli: " . $d["model"] . "</p>
 								<p>Sarjanumero: " . $d["serialnumber"] . "</p>
+								<p>Sijainti: " . $d["cust_address"] . ", " . $d["cust_postal"] . " " . $d["cust_city"] . "</p>
 							</div>
-							<div class=\"modal-footer\">
+							<div class=\"modal-footer\">";
+							
+								if ($_SESSION["cust"]["username"] == true) $html = $html . "
 								<form action=\"index.php\">
 									<input type=\"hidden\" name=\"devices\" value=\"true\">
 									<input type=\"hidden\" name=\"deldevice\" value=\"true\">
@@ -854,8 +1030,9 @@ function modalsfordevices($devices, $showall = false)
 									<input type=\"hidden\" name=\"moddevice\" value=\"true\">
 									<input type=\"hidden\" name=\"device_id\" value=\"" . $d["device_id"] . "\">
 									<input class=\"btn btn-warning pull-left\" type=\"submit\" value=\"Muokkaa laitteen tietoja\">
-								</form>
-								<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
+								</form>";
+								
+								$html = $html . "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
 							</div>
 						</div>
 					</div>
@@ -866,10 +1043,76 @@ function modalsfordevices($devices, $showall = false)
 	else $html = "<!-- modalsfordevices: NO DEVICES FOUND, NO MODALS CREATED -->";
 	return $html;
 }
-?>
 
+function optionsforcategories()
+{
+	$html = "<option value=\"0\">Valitse kategoria</option>";
+	
+	$conn = dbconnect();
+		
+	$sql = "SELECT * FROM category";
+	
+	$result = $conn->query($sql);
+		
+	$rows = array();
+	while ($row = $result->fetch_assoc())
+	{
+		$rows[] = $row;
+	}
+	
+	foreach($rows as $c)
+	{
+		$html = $html . "<option value=\"" . $c["category_id"] . "\">" . $c["name"] . "</option>";
+	}
+	mysqli_close($conn);
+	
+	return $html; // palauttaa luodut optionit stringinä
+}
 
-<footer>
+function generatesearch()
+{
+	$html = '
+	<div class="container">
+		<form method="GET" action="index.php">
+
+		<h2>Selaa</h2>
+		<div class="form-group">
+			<select name="search_category" class="dropdown">
+				' . optionsforcategories() . '
+			</select>
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_name" placeholder="Nimi" value="" . $search["name"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_manufactor" placeholder="Merkki" value="" . $search["manufactor"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_model" placeholder="Malli" value="" . $search["model"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_location" placeholder="Sijainti" value="" . $search["location"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_owner" placeholder="Omistaja" value="" . $search["owner"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_serial" placeholder="Sarjanumero" value="" . $search["serial"]  . "">
+		</div>
+		<div class="form-group">
+			<input type="text" name="search_category" placeholder="Kategoria" value="" . $search["category"]  . "">
+		</div>
+
+		<input type="hidden" name="deviceslease" value="true">
+		<input type="hidden" name="devices_lease_search" value="true">
+		<input type="submit" value="Masa">
+		
+		</form>
+	</div>';
+	return $html;
+}
+
+echo '<footer>
 	<p>footer</p>
 </footer>
 
@@ -919,9 +1162,9 @@ function modalsfordevices($devices, $showall = false)
 			</div>
 		</div>
 	</div>
-</div><!-- end modal -->
+</div><!-- end modal -->';
 
-<?php
+
 if(isset($_SESSION["devices"]))
 {
 	if ($devices_lease_request == "true")
