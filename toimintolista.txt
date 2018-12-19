@@ -1,0 +1,175 @@
+<h1>Toiminnot listattuna</h1>
+<div class="row">
+	<div class="col-md-1">
+		<h2>1</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Rekisteröityminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Sama käyttäjä ei saa rekisteröityä kuin kerran.
+			Salasana kysytään kaksi kertaa, niitä vertaillaan varmennukseksi sille, 
+			että salasana on syötetty varmasti kuten käyttäjä aikoi. "
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>2</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Kirjautuminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Sisään voi kirjautua kirjoittamalla olemassa olevan käyttäjätunnuksen ja sitä vastaavan salasanan.
+			Jos tunnus/salasana on väärin, ohjataan käyttäjä takaisin kirjautumissivulle."
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>3</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Omien tietojen muuttaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Käyttäjä voi muuttaa omia tietojaan. Muutoslomakkeella on vanhat tiedot
+			oletuksena kentissä, joita käyttäjä voi editoida haluamallaan tavalla."
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>4</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Uloskirjautuminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Käyttäjä voi kirjautua ulos sovelluksesta. Uloskirjauksen jälkeen käyttäjä siirtyy kirjautumis-
+			sivulle, jossa hän voi kirjautua sivulle uudestaan."
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>5</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen lisääminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Vain Admin-käyttäjä voi lisätä uuden laitteen. Laitteen voi lisätä ominaisuuksineen, joita ovat
+			nimi, malli, merkki, kuvaus, sijainti, omistaja, kategoria ja sarjanumero."
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>6</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen muuttaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Vain Admin-käyttäjä voi muuttaa laitteen tietoja. "
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>7</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen poistaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Vain Admin-käyttäjä voi poistaa laitteen.
+			Laitetta ei voi poistaa, jos laitteeseen liittyy varaus/lainaus. "
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>8</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteiden selaaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Laitteita on voitavahakea nimen, mallin, merkin, sijainnin, omistajan, kategorian ja/tai sarjanumeron perusteella.
+			Käyttäjä voi antaa minkä tahansa em. hakuehtojen kombinaation."
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>9</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen varaaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Laitteen voi varata kuka tahansa kirjautunut käyttäjä. "
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>10</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen varauksen poistaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Laitteen varauksen voi purkaa admin-käyttäjä tai laitteen
+			varannut käyttäjä. "
+		</p>
+	</div>
+</div>
+<hr>
+<div class="row">
+	<div class="col-md-1">
+		<h2>11</h2>
+	</div>
+	<div class="col-md-3"> == $0
+		<h2>Laitteen varauksen muuttaminen</h2>
+	</div>
+	<div class ="col-md-8">
+		<br>
+		<p>
+		 " 	Vain Admin-käyttäjä voi poistaa laitteen.
+			Laitteen varausta voi muuttaa admin-käyttäjä tai laitteen varannut käyttäjä. "
+		</p>
+	</div>
+</div>
