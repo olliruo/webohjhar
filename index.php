@@ -58,6 +58,12 @@ if (isset($_GET["logout"])) $logout = $_GET["logout"];
 else $logout = "false";
 if (isset($_GET["my_reservations"])) $my_reservations = $_GET["my_reservations"];
 else $my_reservations = "false";
+if (isset($_GET["del_reservation"])) $del_reservation = $_GET["del_reservation"];
+else $del_reservation = "false";
+if (isset($_GET["mod_reservation"])) $mod_reservation = $_GET["mod_reservation"];
+else $mod_reservation = "false";
+if (isset($_GET["mod_reservation_save"])) $mod_reservation_save = $_GET["mod_reservation_save"];
+else $mod_reservation_save = "false";
 
 if (!($register_request == "true" || $changeinfo_request == "true" || $devices_request == "true" || $devices_lease_request == "true" || $moddevice_request == "true" || $my_reservations == "true"))
 {
@@ -165,6 +171,8 @@ else $device_description = "";
 if (isset($_GET["device_serialnumber"])) $device_serialnumber = $_GET["device_serialnumber"];
 else $device_serialnumber = "";
 
+if (isset($_GET["reservation_id"])) $reservation_id = $_GET["reservation_id"];
+else $reservation_id = "";
 if (isset($_GET["lease_device_id"])) $lease_device_id = $_GET["lease_device_id"];
 else $lease_device_id = "";
 if (isset($_GET["lease_customer_id"])) $lease_customer_id = $_GET["lease_customer_id"];
@@ -328,6 +336,61 @@ if ($devices_request == "true")
 
 if ($my_reservations == "true")
 {
+	if ($del_reservation == "true")
+	{
+		if	(dbdeletereservation($reservation_id))
+		echo ' varaus poistettu ';
+		else echo ' varauksen poistaminen epäonnistui ';
+	}
+	
+	if ($mod_reservation == "true")
+	{
+		if(isset($_GET["reservation_id"]))
+		{
+			$modify_res_info = dbgetreservation($_GET["reservation_id"]);
+		
+			echo "			
+			<form name=\"newdevice\" method=\"get\" action=\"index.php\" style=\"margin-bottom: 300px;\">
+				<table border=\"0\" width=\"500\" align=\"center\" class=\"demo-table\">
+					<tr>
+						<td>
+							<h3>Muokkaat varausta " . $modify_res_info["reservation_id"] . "</h3>
+						</td>
+					</tr>		
+					<tr>
+						<td><p>Valitse varauksen alkamispäivämäärä: <input type=\"datetime-local\" name=\"lease_start_date\" value=\"" . date('Y-m-d\TH:i', strtotime($modify_res_info["start"])) . "\"></p></td>
+					</tr>
+					<tr>
+						<td><p>Valitse varauksen päättymispäivämäärä: <input type=\"datetime-local\" name=\"lease_end_date\" value=\"" . date('Y-m-d\TH:i', strtotime($modify_res_info["end"])) . "\"></p></td> 
+					</tr>
+					<tr>
+						<td>
+							<input type = \"hidden\" name = \"my_reservations\" value = \"true\">
+							<input type = \"hidden\" name = \"mod_reservation_save\" value = \"true\">
+							<input type = \"hidden\" name = \"reservation_id\" value = \"" . $modify_res_info["reservation_id"] . "\">
+							<input class=\"btn btn-primary pull-left\" type=\"submit\" name=\"save-device\" value=\"Tallenna\" class=\"btnRegister\">
+						</td>
+					</tr>
+				</table>
+			</form>";
+		}
+		else
+		{
+			echo "<p>Laitteen tietojen haku epäonnistui!</p>";
+		}
+	}
+	
+	if ($mod_reservation_save == "true")
+	{
+		if (dbmodifydevice($_GET["device_id"], $_GET["device_category"], $_GET["device_name"], $_GET["device_manufactor"], $_GET["device_model"], $_GET["device_description"], $_GET["device_serialnumber"]))
+		{
+			echo "<p>Laitteen tiedot päivitetty!</p>";
+		}
+		
+		else echo "<p>Laitteen tietojen päivitys epäonnistui nuuh!</p>";
+	}
+	
+	
 	dbmy_reservations($cust["id"]);
 	// sivu varatuille laitteille
 	echo'
@@ -386,6 +449,7 @@ if ($devices_lease_request == "true")
 		</div>
 	</div>';
 }
+
 if ($changeinfo_request == "true")
 {
 	if($changeinfoapply_request == "true")
@@ -902,6 +966,25 @@ function dbgetdevice($deviceid) // Palauttaa määrätyn laitteen tiedot ID:een 
 	return $result;
 }
 
+function dbgetreservation($reservationid) // Palauttaa määrätyn varauksen tiedot ID:een perusteella
+{
+	$conn = dbconnect();
+	
+	$result = false;
+	
+	if ($conn)
+	{
+		$sql = "SELECT * FROM lease WHERE reservation_id = '$reservationid'";
+		
+        $result = $conn->query($sql);
+		
+		$result = $result->fetch_array(MYSQLI_ASSOC);
+	}
+	
+	mysqli_close($conn);
+	return $result;
+}
+
 function dbgetcategories()
 {
 	$conn = dbconnect();
@@ -952,6 +1035,23 @@ function dbdeletedevice($id)
 		
 		$result = $conn->query($sql);
 	}
+	mysqli_close($conn);
+	return $result;
+}
+
+function dbdeletereservation($id)
+{
+	$conn = dbconnect();
+	$result = false;
+		
+	if ($conn)
+	{
+		$sql = "UPDATE lease SET hide=1 WHERE reservation_id=$id";
+		
+		$result = $conn->query($sql);
+		
+	}
+	
 	mysqli_close($conn);
 	return $result;
 }
@@ -1149,8 +1249,8 @@ function modalsfordevices($devices, $showall = false)
 									<input type=\"hidden\" name=\"lease_device_id\" value=\"" . $d["device_id"] . "\">
 									<input type=\"hidden\" name=\"lease\" value=\"true\">
 									<input type=\"hidden\" name=\"deviceslease\" value=\"true\">
-									<p>Valitse varauksen alkamispäivämäärä: <input type=\"datetime-local\" name=\"lease_start_date\" value=\"\"></p>
-									<p>Valitse varauksen päättymispäivämäärä: <input type=\"datetime-local\" name=\"lease_end_date\" value=\"\"></p>
+									<p>Valitse varauksen alkamispäivämäärä: <input type=\"datetime-local\" name=\"lease_start_date\" value=\"" . date('Y-m-d\TH:i', time()) . "\"></p>
+									<p>Valitse varauksen päättymispäivämäärä: <input type=\"datetime-local\" name=\"lease_end_date\" value=\"" . date('Y-m-d\TH:i', strtotime(date('Y-m-d\TH:i:s', time()) . "+1 week")) . "\"></p>
 									<input class=\"btn btn-primary pull-left\" type=\"submit\" value=\"Varaa laite.\">
 								</form>";								
 								if ($_SESSION["cust"]["is_admin"] == true) $html = $html . "
@@ -1322,6 +1422,8 @@ function dbcreatereservation($custid, $device_id, $start_datetime, $end_datetime
 	
 	$result = $conn->query($sql);
 	
+	$rows = array();
+	
 	while ($row = $result->fetch_assoc())
 	{
 		$rows[] = $row;
@@ -1333,7 +1435,7 @@ function dbcreatereservation($custid, $device_id, $start_datetime, $end_datetime
 	{
 		foreach($leases as $l)
 		{
-			if (strtotime($l["end"]) > time())
+			if (strtotime($l["end"]) > time() && $l["hide"] == 0)
 			{
 				echo "<p>Laite on varattu eikä varauksen aika ole vielä loppunut.</p>";
 				echo "<p>Laite vapautuu: " . $l["end"] . ".</p>";
@@ -1365,7 +1467,7 @@ function dbcreatereservation($custid, $device_id, $start_datetime, $end_datetime
 	return $result;
 }
 
-function buttonsforleases()
+function buttonsforleases($leases)
 {
 	$conn = dbconnect();
 			
@@ -1385,10 +1487,13 @@ function buttonsforleases()
 	customer.postal as cust_postal,
 	customer.city as cust_city,
 	lease.start as lease_start,
-	lease.end as lease_end
+	lease.end as lease_end,
+	lease.hide as reservation_hide
 	FROM devices INNER JOIN customer ON devices.customer_id = customer.customer_id INNER JOIN category ON devices.category_id = category.category_id INNER JOIN lease ON devices.device_id = lease.device_id";
 	
 	$result = $conn->query($sql);
+	
+	$html = "";
 	
 	if ($result == false)
 	{
@@ -1403,24 +1508,27 @@ function buttonsforleases()
 			$rows[] = $row;
 		}
 		
+		$customer = $leases[0]["customer_id"];
+		
 		foreach($rows as $d)
 		{
-			
-			if($d["hide"] == 0)
+			if ($d["customer_id"] == $customer && strtotime($d["lease_end"]) > time() && $d["reservation_hide"] == 0)
 			{
-				$html = "
+				$html = $html . "
 				<a class=\"btn list-group-item\" data-toggle=\"modal\" data-target=\"#device" . $d["device_id"] . "\">
 					<h3>" . $d["name"] . "</h3>
 					<p>" . $d["description"] . "</p>
-					<p>" . $d["lease_start"] . "</p>
-					<p>" . $d["lease_end"] . "</p>
+					<p>Varattu alkaen: " . $d["lease_start"] . "</p>
+					<p>Varaus loppuu: " . $d["lease_end"] . "</p>
 				</a>";
 			}
 		}
 	}
+	
+	return $html;
 }
 
-function modalsforleases()
+function modalsforleases($leases)
 {
 	$conn = dbconnect();
 			
@@ -1439,11 +1547,15 @@ function modalsforleases()
 	customer.address as cust_address,
 	customer.postal as cust_postal,
 	customer.city as cust_city,
+	lease.reservation_id as reservation_id,
 	lease.start as lease_start,
-	lease.end as lease_end
+	lease.end as lease_end,
+	lease.hide as reservation_hide
 	FROM devices INNER JOIN customer ON devices.customer_id = customer.customer_id INNER JOIN category ON devices.category_id = category.category_id INNER JOIN lease ON devices.device_id = lease.device_id";
 	
 	$result = $conn->query($sql);
+	
+	$html="";
 	
 	if ($result == false)
 	{
@@ -1458,62 +1570,61 @@ function modalsforleases()
 			$rows[] = $row;
 		}
 		
+		$customer = $leases[0]["customer_id"];
+		
 		foreach($rows as $d)
 		{
-			$html = $html . "
-			<div id=\"device" . $d["device_id"] . "\" class=\"modal fade\" role=\"dialog\">
-				<div class=\"modal-dialog\">
-					<div class=\"modal-content\">
-						<div class=\"modal-header\" style=\"background-color: rgb(249, 150, 29)\">
-							<h3 class=\"modal-title\" style=\"color:white;\">" . $d["name"] . "</h3>
-						</div>
-						<div class=\"modal-body text-center\">
-							<h3>Varauksen tiedot</h3>
-							<p>Alkaa: " . $d["lease_start"] . "</p>
-							<p>Loppuu: " . $d["lease_end"] . "</p>
-							<h3>Laitteen tiedot</h3>
-							<p>Omistaja: " . $d["customer_id"] . "</p>
-							<p>Kategoria: " . $d["category_id"] . "</p>
-							<p>Kuvaus: " . $d["description"] . "</p>
-							<p>Valmistaja: " . $d["manufactor"] . "</p>
-							<p>Malli: " . $d["model"] . "</p>
-							<p>Sarjanumero: " . $d["serialnumber"] . "</p>
-							<p>Sijainti: " . $d["cust_address"] . ", " . $d["cust_postal"] . " " . $d["cust_city"] . "</p>
-							<p>Omistaja: " . $d["cust_firstname"] . " " . $d["cust_lastname"] . "</p>
-						</div>
-						<div class=\"modal-footer\">
-							<form method=\"GET\" action=\"index.php\">
-								<input type=\"hidden\" name=\"lease_device_id\" value=\"" . $d["device_id"] . "\">
-								<input type=\"hidden\" name=\"lease\" value=\"true\">
-								<input type=\"hidden\" name=\"deviceslease\" value=\"true\">
-								<p>Valitse varauksen alkamispäivämäärä: <input type=\"datetime-local\" name=\"lease_start_date\" value=\"\"></p>
-								<p>Valitse varauksen päättymispäivämäärä: <input type=\"datetime-local\" name=\"lease_end_date\" value=\"\"></p>
-								<input class=\"btn btn-primary pull-left\" type=\"submit\" value=\"Varaa laite.\">
-							</form>";	
-
-							// VAIHDA del device jne -> del reservation (sama mod device -> mod reservation jne)
-							if ($_SESSION["cust"]["is_admin"] == true) $html = $html . "
-							<form action=\"index.php\">
-								<input type=\"hidden\" name=\"devices\" value=\"true\">
-								<input type=\"hidden\" name=\"del_reservation\" value=\"true\">
-								<input type=\"hidden\" name=\"device_id\" value=\"" . $d["device_id"] . "\">
-								<input class=\"btn btn-danger pull-left\" type=\"submit\" value=\"Poista varaus\">
-							</form>
-							<form action=\"index.php\">
-								<input type=\"hidden\" name=\"mod_reservation\" value=\"true\">
-								<input type=\"hidden\" name=\"device_id\" value=\"" . $d["device_id"] . "\">
-								<input class=\"btn btn-warning pull-left\" type=\"submit\" value=\"Muokkaa varausta\">
-							</form>";
-							
-							$html = $html . "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
+			if ($d["customer_id"] == $customer && strtotime($d["lease_end"]) > time() && $d["reservation_hide"] == 0)
+			{
+				$html = $html . "
+				<div id=\"device" . $d["device_id"] . "\" class=\"modal fade\" role=\"dialog\">
+					<div class=\"modal-dialog\">
+						<div class=\"modal-content\">
+							<div class=\"modal-header\" style=\"background-color: rgb(249, 150, 29)\">
+								<h3 class=\"modal-title\" style=\"color:white;\">" . $d["name"] . "</h3>
+							</div>
+							<div class=\"modal-body text-center\">
+								<h3>Varauksen tiedot</h3>
+								<p>Alkaa: " . $d["lease_start"] . "</p>
+								<p>Loppuu: " . $d["lease_end"] . "</p>
+								<h3>Laitteen tiedot</h3>
+								<p>Omistaja: " . $d["customer_id"] . "</p>
+								<p>Kategoria: " . $d["category_id"] . "</p>
+								<p>Kuvaus: " . $d["description"] . "</p>
+								<p>Valmistaja: " . $d["manufactor"] . "</p>
+								<p>Malli: " . $d["model"] . "</p>
+								<p>Sarjanumero: " . $d["serialnumber"] . "</p>
+								<p>Sijainti: " . $d["cust_address"] . ", " . $d["cust_postal"] . " " . $d["cust_city"] . "</p>
+								<p>Omistaja: " . $d["cust_firstname"] . " " . $d["cust_lastname"] . "</p>
+							</div>
+							<div class=\"modal-footer\">";
+								if ($_SESSION["cust"]["is_admin"] == true) $html = $html . "
+								<form action=\"index.php\">
+									<input type=\"hidden\" name=\"mod_reservation\" value=\"true\">
+									<input type=\"hidden\" name=\"my_reservations\" value=\"true\">
+									<input type=\"hidden\" name=\"reservation_id\" value=\"" . $d["reservation_id"] . "\">
+									<input class=\"btn btn-warning pull-left\" type=\"submit\" value=\"Muokkaa varausta\">
+								</form>
+								<form action=\"index.php\">
+									<input type=\"hidden\" name=\"my_reservations\" value=\"true\">
+									<input type=\"hidden\" name=\"del_reservation\" value=\"true\">
+									<input type=\"hidden\" name=\"reservation_id\" value=\"" . $d["reservation_id"] . "\">
+									<input class=\"btn btn-danger pull-left\" type=\"submit\" value=\"Poista varaus\">
+								</form>";
+								
+								$html = $html . "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\">Sulje</button>
+							</div>
 						</div>
 					</div>
-				</div>
-			</div>";
+				</div>";
+			}
 		}
 	}
+	return $html;
 }
 
+if (true) // COLLAPSE
+{
 echo '
 <footer style="background-color: rgb(249, 150, 29); position: relative; bottom: 0; left: 0; overflow: hidden; width: 100%; height: 120px; colour: white;">
 
@@ -1585,11 +1696,15 @@ echo '
 		</div>
 	</div>
 </div><!-- end modal -->';
-
+}
 
 if(isset($_SESSION["devices"]))
 {
-	if ($devices_lease_request == "true")
+	if ($my_reservations == "true")
+	{
+		echo(modalsforleases($_SESSION["leases"]));
+	}
+	else if ($devices_lease_request == "true")
 	{
 		echo(modalsfordevices($_SESSION["devices"], true));
 	}
