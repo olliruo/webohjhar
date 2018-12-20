@@ -231,7 +231,7 @@ if ($moddevice_request == "true")
 			echo "<p>Laitteen tiedot päivitetty!</p>";
 		}
 		
-		else echo "<p>Laitteen tietojen päivitys epäonnistui nuuh!</p>";
+		else echo "<p>Laitteen tietojen päivitys epäonnistui!</p>";
 	}
 	
 	if(isset($_GET["device_id"]))
@@ -387,7 +387,7 @@ if ($my_reservations == "true")
 			echo "<p>Laitteen tiedot päivitetty!</p>";
 		}
 		
-		else echo "<p>Laitteen tietojen päivitys epäonnistui nuuh!</p>";
+		else echo "<p>Laitteen tietojen päivitys epäonnistui!</p>";
 	}
 	
 	
@@ -1325,7 +1325,7 @@ function modalsfordevices($devices, $showall = false)
 	return $html;
 }
 
-function optionsforcategories()
+function optionsforcategories($value = "id")
 {
 	$html = "<option value=\"0\">Valitse kategoria</option>";
 	
@@ -1343,7 +1343,14 @@ function optionsforcategories()
 	
 	foreach($rows as $c)
 	{
-		$html = $html . "<option value=\"" . $c["name"] . "\">" . $c["name"] . "</option>";
+		if ($value == "id")
+		{
+			$html = $html . "<option value=\"" . $c["category_id"] . "\">" . $c["name"] . "</option>";
+		}
+		if ($value == "name")
+		{
+			$html = $html . "<option value=\"" . $c["name"] . "\">" . $c["name"] . "</option>";
+		}
 	}
 	mysqli_close($conn);
 	
@@ -1384,7 +1391,7 @@ function generatesearch()
 		<h2>Selaa</h2>
 		<div class="form-group">
 			<select name="search_category" class="dropdown">
-				' . optionsforcategories() . '
+				' . optionsforcategories("name") . '
 			</select>
 		</div>
 		<div class="form-group">
@@ -1656,7 +1663,7 @@ echo '
 					<table border="0" width="500" align="center" class="demo-table">
 						<tr>
 							<td>Kategoria</td>
-							<td><select name="device_category" class="dropdown">' . optionsforcategories() . '</select></td>
+							<td><select name="device_category" class="dropdown">' . optionsforcategories("id") . '</select></td>
 						</tr>
 						<tr>
 							<td>Omistaja</td>
