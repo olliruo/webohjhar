@@ -1,6 +1,5 @@
 # webohjhar
 Toimintolista Web-ohjelmoinnin harjoitustyölle
-Olli-Pekka Ruottinen
 
 1.	Rekisteröityminen
 	Sama käyttäjä ei saa rekisteröityä kuin kerran.
